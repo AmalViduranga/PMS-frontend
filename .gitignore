@@ -1,0 +1,39 @@
+## Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+## Build output
+dist/
+dist-ssr/
+.angular/
+.angular/cache/
+
+## Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+## Local secrets & environment files
+.env
+.env.local
+.env.*.local
+*.local.json
+
+## Test & Coverage
+coverage/
+cypress/videos/
+cypress/screenshots/
+.nyc_output/
+
+## Editor & System
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db

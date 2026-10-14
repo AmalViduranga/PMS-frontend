@@ -10,7 +10,8 @@
     "build": "ng build web && ng build storefront",
     "build:web": "ng build web",
     "build:storefront": "ng build storefront",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint . --ext .ts,.html"
   },
   "dependencies": {
     "@angular/animations": "18.2.11",
@@ -28,9 +29,16 @@
     "zone.js": "~0.14.10"
   },
   "devDependencies": {
+    "@angular-eslint/builder": "^18.4.3",
+    "@angular-eslint/eslint-plugin": "^18.4.3",
+    "@angular-eslint/eslint-plugin-template": "^18.4.3",
+    "@angular-eslint/schematics": "^18.4.3",
+    "@angular-eslint/template-parser": "^18.4.3",
     "@angular/build": "18.2.11",
     "@angular/cli": "18.2.11",
     "@angular/compiler-cli": "18.2.11",
-    "typescript": "~5.5.4"
+    "eslint": "^8.57.1",
+    "typescript": "~5.5.4",
+    "typescript-eslint": "^7.18.0"
   }
 }

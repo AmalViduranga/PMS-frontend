@@ -178,29 +178,46 @@ export class ReturnsComponent {
 
     this.processing.set(true);
 
-    const payload = {
-      originalSaleId: s.id,
-      shiftId: s.shiftId,
-      refundMethod: this.refundMethod,
-      reason: this.returnReason,
-      items: linesToReturn.map(l => ({
-        originalSaleItemId: l.saleItemId,
-        returnedQuantity: l.returnQuantity
-      }))
-    };
-
-    this.api.post<any>('/api/pos/returns', payload).subscribe({
-      next: (res) => {
-        this.processing.set(false);
-        if (res.success) {
-          alert(`Return processed successfully! Return Reference: ${res.data.returnNumber}. Stock has been routed to Quarantine.`);
-          this.sale.set(null);
-          this.invoiceQuery = '';
+    // Ensure cashier has an active open shift to record cash refund
+    this.api.get<any>('/api/shifts/current').subscribe({
+      next: (shiftRes) => {
+        if (!shiftRes.success || !shiftRes.data || shiftRes.data.status !== 'Open') {
+          this.processing.set(false);
+          alert('You must have an active open cashier shift to process refunds.');
+          return;
         }
+
+        const activeShiftId = shiftRes.data.id;
+        const payload = {
+          originalSaleId: s.id,
+          shiftId: activeShiftId,
+          refundMethod: this.refundMethod,
+          reason: this.returnReason,
+          idempotencyKey: `RET-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+          items: linesToReturn.map(l => ({
+            originalSaleItemId: l.saleItemId,
+            returnedQuantity: l.returnQuantity
+          }))
+        };
+
+        this.api.post<any>('/api/pos/returns', payload).subscribe({
+          next: (res) => {
+            this.processing.set(false);
+            if (res.success) {
+              alert(`Return processed successfully! Return Reference: ${res.data.returnNumber}. Stock has been routed to Quarantine.`);
+              this.sale.set(null);
+              this.invoiceQuery = '';
+            }
+          },
+          error: (err) => {
+            this.processing.set(false);
+            alert(err.error?.message || 'Failed to process return.');
+          }
+        });
       },
-      error: (err) => {
+      error: () => {
         this.processing.set(false);
-        alert(err.error?.message || 'Failed to process return.');
+        alert('Could not verify active cashier shift.');
       }
     });
   }

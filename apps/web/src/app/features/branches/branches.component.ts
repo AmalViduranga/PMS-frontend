@@ -40,13 +40,19 @@ import { ApiService } from '../../core/services/api.service';
               <div>🌐 {{ branch.timezone }} ({{ branch.currency }})</div>
             </div>
 
-            <div style="border-top: 1px solid var(--border); padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center;">
               <button (click)="viewRegisters(branch)" class="btn btn-secondary btn-sm">
-                View Registers ({{ getRegisterCount(branch.id) }})
+                Registers ({{ getRegisterCount(branch.id) }})
               </button>
-              <button (click)="openCreateRegisterModal(branch)" class="btn btn-secondary btn-sm" style="color: var(--primary);">
-                + Register
-              </button>
+              <div style="display: flex; gap: 6px;">
+                <button (click)="openEditBranchModal(branch)" class="btn btn-secondary btn-sm">Edit</button>
+                <button (click)="toggleBranchStatus(branch)" class="btn btn-sm" [ngClass]="branch.isActive ? 'btn-secondary' : 'btn-primary'" style="font-size: 0.78rem;">
+                  {{ branch.isActive ? 'Deactivate' : 'Activate' }}
+                </button>
+                <button (click)="openCreateRegisterModal(branch)" class="btn btn-secondary btn-sm" style="color: var(--primary);">
+                  + Reg
+                </button>
+              </div>
             </div>
           </div>
         }
@@ -177,6 +183,52 @@ import { ApiService } from '../../core/services/api.service';
           </div>
         </div>
       }
+
+      <!-- Modal: Edit Branch -->
+      @if (showEditBranchModal()) {
+        <div class="modal-overlay">
+          <div class="modal-content">
+            <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 6px;">Edit Branch Details</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Updating {{ editingBranch?.code }}</p>
+
+            <form (ngSubmit)="saveEditBranch()">
+              <div class="form-group">
+                <label class="form-label">Branch Name</label>
+                <input type="text" [(ngModel)]="editingBranch.name" name="name" required class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Physical Address</label>
+                <input type="text" [(ngModel)]="editingBranch.address" name="address" required class="form-control">
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="form-label">Phone</label>
+                  <input type="text" [(ngModel)]="editingBranch.phone" name="phone" required class="form-control">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email</label>
+                  <input type="email" [(ngModel)]="editingBranch.email" name="email" required class="form-control">
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+                <div class="form-group">
+                  <label class="form-label">Timezone</label>
+                  <input type="text" [(ngModel)]="editingBranch.timezone" name="timezone" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Currency</label>
+                  <input type="text" [(ngModel)]="editingBranch.currency" name="currency" class="form-control">
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" (click)="showEditBranchModal.set(false)" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
     </div>
   `
 })
@@ -189,8 +241,11 @@ export class BranchesComponent implements OnInit {
   currentBranchRegisters = signal<any[]>([]);
 
   showBranchModal = signal<boolean>(false);
+  showEditBranchModal = signal<boolean>(false);
   showRegisterModal = signal<boolean>(false);
   targetBranchForRegister = signal<any>(null);
+
+  editingBranch: any = {};
 
   newBranch = {
     code: '',
@@ -285,6 +340,41 @@ export class BranchesComponent implements OnInit {
           if (this.selectedBranch()?.id === branch.id) {
             this.viewRegisters(branch);
           }
+        }
+      }
+    });
+  }
+
+  openEditBranchModal(branch: any): void {
+    this.editingBranch = { ...branch };
+    this.showEditBranchModal.set(true);
+  }
+
+  saveEditBranch(): void {
+    if (!this.editingBranch?.id) return;
+    this.api.put(`/api/branches/${this.editingBranch.id}`, {
+      name: this.editingBranch.name,
+      address: this.editingBranch.address,
+      phone: this.editingBranch.phone,
+      email: this.editingBranch.email,
+      timezone: this.editingBranch.timezone,
+      currency: this.editingBranch.currency
+    }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.showEditBranchModal.set(false);
+          this.loadBranches();
+        }
+      }
+    });
+  }
+
+  toggleBranchStatus(branch: any): void {
+    const targetStatus = !branch.isActive;
+    this.api.put(`/api/branches/${branch.id}/status`, { isActive: targetStatus }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.loadBranches();
         }
       }
     });

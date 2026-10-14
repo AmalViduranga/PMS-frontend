@@ -580,9 +580,9 @@ export class WorkforceComponent implements OnInit {
   }
 
   loadBranches() {
-    this.api.get<any[]>('/api/operations/branches').subscribe({
+    this.api.get<any[]>('/api/branches').subscribe({
       next: (res) => {
-        if (res.isSuccess && res.data) {
+        if ((res.success || res.isSuccess) && res.data) {
           this.branches.set(res.data);
         }
       }

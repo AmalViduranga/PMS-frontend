@@ -53,7 +53,10 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
 
           <div class="form-group" style="margin-bottom: 24px;">
-            <label class="form-label" style="color: #cbd5e1;">Password</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="form-label" style="color: #cbd5e1; margin-bottom: 0;">Password</label>
+              <a routerLink="/forgot-password" style="font-size: 0.8rem; color: #14b8a6; text-decoration: none;">Forgot password?</a>
+            </div>
             <input 
               type="password" 
               name="password" 

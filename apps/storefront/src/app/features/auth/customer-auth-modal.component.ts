@@ -93,8 +93,8 @@ import { CustomerAuthService } from '../../core/services/customer-auth.service';
 export class CustomerAuthModalComponent {
   auth = inject(CustomerAuthService);
 
-  onClose = output<void>();
-  onAuthSuccess = output<void>();
+  closeModal = output<void>();
+  authSuccess = output<void>();
 
   isRegister = signal(false);
 
@@ -115,7 +115,7 @@ export class CustomerAuthModalComponent {
     }).subscribe({
       next: (res) => {
         if (res.isSuccess) {
-          this.onAuthSuccess.emit();
+          this.authSuccess.emit();
           this.close();
         } else {
           alert('Login failed: ' + res.message);
@@ -135,7 +135,7 @@ export class CustomerAuthModalComponent {
             password: this.registerData.password
           }).subscribe({
             next: () => {
-              this.onAuthSuccess.emit();
+              this.authSuccess.emit();
               this.close();
             }
           });
@@ -148,6 +148,6 @@ export class CustomerAuthModalComponent {
   }
 
   close() {
-    this.onClose.emit();
+    this.closeModal.emit();
   }
 }

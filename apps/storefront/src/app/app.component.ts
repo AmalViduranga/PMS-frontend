@@ -110,13 +110,13 @@ import { CustomerAuthModalComponent } from './features/auth/customer-auth-modal.
     </footer>
 
     <!-- SLIDE-IN CART DRAWER -->
-    <app-cart-drawer (onRequestAuth)="showAuthModal.set(true)"></app-cart-drawer>
+    <app-cart-drawer (requestAuth)="showAuthModal.set(true)"></app-cart-drawer>
 
     <!-- CUSTOMER AUTH MODAL -->
     @if (showAuthModal()) {
       <app-customer-auth-modal
-        (onClose)="showAuthModal.set(false)"
-        (onAuthSuccess)="showAuthModal.set(false)"
+        (closeModal)="showAuthModal.set(false)"
+        (authSuccess)="showAuthModal.set(false)"
       ></app-customer-auth-modal>
     }
   `

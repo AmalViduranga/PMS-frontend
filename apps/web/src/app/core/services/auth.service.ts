@@ -86,6 +86,14 @@ export class AuthService {
     });
   }
 
+  forgotPassword(email: string): Observable<ApiResponse<boolean>> {
+    return this.api.post<boolean>('/api/auth/forgot-password', { email });
+  }
+
+  resetPassword(payload: { email: string; token: string; newPassword: string }): Observable<ApiResponse<boolean>> {
+    return this.api.post<boolean>('/api/auth/reset-password', payload);
+  }
+
   hasPermission(permission: string): boolean {
     const user = this.currentUser();
     if (!user) return false;

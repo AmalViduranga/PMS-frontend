@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, signal } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
@@ -378,7 +378,7 @@ interface CartItem {
     </div>
   `
 })
-export class PosComponent implements OnInit, OnDestroy {
+export class PosComponent implements OnInit {
   private api = inject(ApiService);
   private auth = inject(AuthService);
 
@@ -417,8 +417,6 @@ export class PosComponent implements OnInit, OnDestroy {
     this.loadCurrentShift();
     this.loadRegisters();
   }
-
-  ngOnDestroy(): void {}
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent): void {

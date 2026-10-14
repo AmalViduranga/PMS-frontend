@@ -181,7 +181,7 @@ export class CartDrawerComponent implements OnInit {
   private api = inject(ApiService);
   private router = inject(Router);
 
-  onRequestAuth = output<void>();
+  requestAuth = output<void>();
 
   branches = signal<any[]>([]);
   uploading = signal(false);
@@ -246,7 +246,7 @@ export class CartDrawerComponent implements OnInit {
 
   submitCheckout() {
     if (!this.auth.isAuthenticated()) {
-      this.onRequestAuth.emit();
+      this.requestAuth.emit();
       return;
     }
 

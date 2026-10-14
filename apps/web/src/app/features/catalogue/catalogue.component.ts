@@ -60,6 +60,7 @@ import { ApiService, PagedResult } from '../../core/services/api.service';
               <th>Storage</th>
               <th>Rx</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -89,10 +90,15 @@ import { ApiService, PagedResult } from '../../core/services/api.service';
                     {{ prod.isActive ? 'Active' : 'Inactive' }}
                   </span>
                 </td>
+                <td>
+                  <button (click)="openEditProductModal(prod)" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">
+                    Edit
+                  </button>
+                </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 36px;">
+                <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 36px;">
                   No products found matching your search.
                 </td>
               </tr>
@@ -105,14 +111,18 @@ import { ApiService, PagedResult } from '../../core/services/api.service';
       @if (showProductModal()) {
         <div class="modal-overlay">
           <div class="modal-content" style="max-width: 680px;">
-            <h2 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 6px;">Add New Medicine Product</h2>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Complete pharmaceutical profile & price schedule</p>
+            <h2 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 6px;">
+              {{ isEditing ? 'Edit Medicine Product' : 'Add New Medicine Product' }}
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+              {{ isEditing ? 'Update pharmaceutical pricing, barcodes, and availability' : 'Complete pharmaceutical profile & price schedule' }}
+            </p>
 
             <form (ngSubmit)="saveProduct()">
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                   <label class="form-label">SKU</label>
-                  <input type="text" [(ngModel)]="newProduct.sku" name="sku" required placeholder="e.g. PARA-500MG" class="form-control">
+                  <input type="text" [(ngModel)]="newProduct.sku" name="sku" [readonly]="isEditing" required placeholder="e.g. PARA-500MG" class="form-control">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Brand Name</label>
@@ -175,12 +185,12 @@ import { ApiService, PagedResult } from '../../core/services/api.service';
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Barcode (Keyboard Wedge Scannable)</label>
-                  <input type="text" [(ngModel)]="barcodeInput" name="barcode" placeholder="e.g. 4792019283710" class="form-control">
+                  <label class="form-label">Barcodes (Comma-separated for multiple barcodes)</label>
+                  <input type="text" [(ngModel)]="barcodeInput" name="barcode" placeholder="e.g. 4792019283710, 4792019283711" class="form-control">
                 </div>
               </div>
 
-              <div style="display: flex; gap: 24px; margin: 12px 0 24px;">
+              <div style="display: flex; flex-wrap: wrap; gap: 24px; margin: 12px 0 24px;">
                 <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
                   <input type="checkbox" [(ngModel)]="newProduct.isPrescriptionRequired" name="isPrescriptionRequired">
                   <span>Prescription Required (Rx)</span>
@@ -189,6 +199,12 @@ import { ApiService, PagedResult } from '../../core/services/api.service';
                   <input type="checkbox" [(ngModel)]="newProduct.isPublishedOnline" name="isPublishedOnline">
                   <span>Publish to Customer Storefront</span>
                 </label>
+                @if (isEditing) {
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
+                    <input type="checkbox" [(ngModel)]="newProduct.isActive" name="isActive">
+                    <span>Product Is Active</span>
+                  </label>
+                }
               </div>
 
               <div style="display: flex; justify-content: flex-end; gap: 12px;">
@@ -274,7 +290,12 @@ export class CatalogueComponent implements OnInit {
     });
   }
 
+  isEditing = false;
+  editingProductId: string | null = null;
+
   openCreateProductModal(): void {
+    this.isEditing = false;
+    this.editingProductId = null;
     this.newProduct = {
       sku: '',
       brandName: '',
@@ -290,24 +311,60 @@ export class CatalogueComponent implements OnInit {
       sellingPrice: 15.0,
       costPrice: 8.5,
       taxRatePercentage: 0.0,
-      reorderThreshold: 50
+      reorderThreshold: 50,
+      isActive: true
     };
     this.barcodeInput = '';
     this.showProductModal.set(true);
   }
 
+  openEditProductModal(prod: any): void {
+    this.isEditing = true;
+    this.editingProductId = prod.id;
+    this.newProduct = {
+      brandName: prod.brandName,
+      genericName: prod.genericName,
+      strength: prod.strength,
+      dosageForm: prod.dosageForm,
+      categoryId: prod.categoryId,
+      storageCondition: prod.storageCondition,
+      isPrescriptionRequired: prod.isPrescriptionRequired,
+      isPublishedOnline: prod.isPublishedOnline,
+      isOrderEligible: prod.isOrderEligible,
+      baseUnit: prod.baseUnit,
+      sellingPrice: prod.sellingPrice,
+      costPrice: prod.costPrice || 0,
+      taxRatePercentage: prod.taxRatePercentage || 0,
+      reorderThreshold: prod.reorderThreshold || 0,
+      isActive: prod.isActive
+    };
+    this.barcodeInput = (prod.barcodes || []).join(', ');
+    this.showProductModal.set(true);
+  }
+
   saveProduct(): void {
+    const barcodesList = this.barcodeInput
+      ? this.barcodeInput.split(',').map(b => b.trim()).filter(b => b.length > 0)
+      : [];
+
     const payload = {
       ...this.newProduct,
-      barcodes: this.barcodeInput ? [this.barcodeInput] : []
+      barcodes: barcodesList
     };
 
-    this.api.post('/api/catalogue/products', payload).subscribe({
+    const request$ = this.isEditing
+      ? this.api.put(`/api/catalogue/products/${this.editingProductId}`, payload)
+      : this.api.post('/api/catalogue/products', payload);
+
+    request$.subscribe({
       next: (res) => {
         if (res.success) {
           this.showProductModal.set(false);
           this.loadProducts();
         }
+      },
+      error: (err) => {
+        alert(err.error?.message || 'Failed to save product. Please check for duplicate SKU or Barcode.');
       }
     });
   }
